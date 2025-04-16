@@ -39,19 +39,34 @@ android {
 }
 
 dependencies {
+  // Core
   implementation(libs.androidx.core.ktx)
   implementation(libs.androidx.lifecycle.runtime.ktx)
   implementation(libs.androidx.activity.compose)
+
+  // Compose
   implementation(platform(libs.androidx.compose.bom))
   implementation(libs.androidx.ui)
   implementation(libs.androidx.ui.graphics)
   implementation(libs.androidx.ui.tooling.preview)
   implementation(libs.androidx.material3)
+
+  // Coroutines
   implementation(libs.kotlinx.coroutines.core)
   implementation(libs.kotlinx.coroutines.android)
+
+  // Serialization
   implementation(libs.kotlinx.serialization.json)
+
+  // Ktor
   implementation(libs.ktor.client.core)
   implementation(libs.ktor.client.okhttp)
+
+  // Koin
+  implementation(platform(libs.koin.bom))
+  implementation(libs.koin.compose)
+
+  // Test
   testImplementation(libs.junit)
   androidTestImplementation(libs.androidx.junit)
   androidTestImplementation(libs.androidx.espresso.core)
