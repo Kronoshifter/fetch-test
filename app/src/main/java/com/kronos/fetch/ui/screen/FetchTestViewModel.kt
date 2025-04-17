@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 data class FetchTestUiState(
@@ -39,7 +40,7 @@ class FetchTestViewModel(
       is Async.Success -> uiState.copy(items = itemsAsync.data).toSuccess()
       is Async.Error -> uiState.copy(userMessage = itemsAsync.message).toSuccess()
     }
-  }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), Async.Loading)
+  }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(stopTimeout = 5.seconds, replayExpiration = 2.seconds), Async.Loading)
 
   fun clearUserMessage() {
     _uiState.update { it.copy(userMessage = null) }
@@ -61,6 +62,8 @@ class FetchTestViewModel(
   }
 
   fun refresh() {
+    _uiState.update { FetchTestUiState() }
+    _itemsAsync.update { Async.Loading }
     fetchItems()
   }
 
