@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.koin.core.KoinApplication.Companion.init
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -37,13 +38,26 @@ class FetchTestViewModel(
   val uiState = combine(_uiState, _itemsAsync) { uiState, itemsAsync ->
     when (itemsAsync) {
       Async.Loading -> Async.Loading
-      is Async.Success -> uiState.copy(items = itemsAsync.data).toSuccess()
+      is Async.Success -> {
+        uiState.copy(
+          items = itemsAsync.data
+            .filterNot { it.name.isNullOrBlank() }
+            .sortedByListIdAndName()
+        ).toSuccess()
+      }
+
       is Async.Error -> uiState.copy(userMessage = itemsAsync.message).toSuccess()
     }
   }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(stopTimeout = 5.seconds, replayExpiration = 2.seconds), Async.Loading)
 
   fun clearUserMessage() {
     _uiState.update { it.copy(userMessage = null) }
+  }
+
+  fun refresh() {
+    _uiState.update { FetchTestUiState() }
+    _itemsAsync.update { Async.Loading }
+    fetchItems()
   }
 
   private fun fetchItems() {
@@ -61,11 +75,14 @@ class FetchTestViewModel(
     }
   }
 
-  fun refresh() {
-    _uiState.update { FetchTestUiState() }
-    _itemsAsync.update { Async.Loading }
-    fetchItems()
-  }
+  private fun List<FetchItem>.sortedByListIdAndName() = sortedWith(
+    compareBy(
+      { it.listId },
+      // Using my best judgment here, I'm thinking that sorted by name should mean that names with smaller numbers in them should be sorted before other ones
+      { it.name?.length ?: 0 },
+      { it.name }
+    )
+  )
 
   init {
     fetchItems()
