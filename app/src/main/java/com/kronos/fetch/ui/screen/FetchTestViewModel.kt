@@ -1,34 +1,79 @@
 package com.kronos.fetch.ui.screen
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kronos.fetch.model.FetchItem
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import com.kronos.fetch.network.ApiService
+import com.kronos.fetch.network.Async
+import com.kronos.fetch.network.toError
+import com.kronos.fetch.network.toSuccess
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.seconds
 
 data class FetchTestUiState(
-  val items: List<FetchItem> = emptyList()
+  val items: List<FetchItem> = emptyList(),
+  val userMessage: String? = null
 )
 
 class FetchTestViewModel(
-
+  private val api: ApiService
 ) : ViewModel() {
-  private val _state = MutableStateFlow(FetchTestUiState())
-  val state = _state.asStateFlow()
+  private val _uiState = MutableStateFlow(FetchTestUiState())
+  private val _itemsAsync = MutableStateFlow<Async<List<FetchItem>>>(Async.Loading)
+
+  val uiState = combine(_uiState, _itemsAsync) { uiState, itemsAsync ->
+    when (itemsAsync) {
+      Async.Loading -> Async.Loading
+      is Async.Success -> {
+        uiState.copy(
+          items = itemsAsync.data
+            .filterNot { it.name.isNullOrBlank() }
+            .sortedByListIdAndName()
+        ).toSuccess()
+      }
+
+      is Async.Error -> uiState.copy(userMessage = itemsAsync.message).toSuccess()
+    }
+  }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(stopTimeout = 5.seconds, replayExpiration = 2.seconds), Async.Loading)
+
+  fun clearUserMessage() {
+    _uiState.update { it.copy(userMessage = null) }
+  }
+
+  fun refresh() {
+    _uiState.update { FetchTestUiState() }
+    _itemsAsync.update { Async.Loading }
+    fetchItems()
+  }
+
+  private fun fetchItems() {
+    viewModelScope.launch {
+      api.fetchItems()
+        .map { it.toSuccess() }
+        .flowOn(Dispatchers.Default)
+        .catch { error ->
+          Log.e("FetchTestViewModel", error.message, error)
+          emit((error.message ?: "Error retrieving items, please try again").toError())
+        }
+        .collect { asyncItems ->
+          _itemsAsync.update { asyncItems }
+        }
+    }
+  }
+
+  private fun List<FetchItem>.sortedByListIdAndName() = sortedWith(
+    compareBy(
+      { it.listId },
+      // Using my best judgment here, I'm thinking that sorted by name should mean that names with smaller numbers in them should be sorted before other ones
+      { it.name?.length ?: 0 },
+      { it.name }
+    )
+  )
 
   init {
-    viewModelScope.launch {
-      repeat(10) { index ->
-        delay(2.seconds)
-        _state.update { current ->
-          val item = FetchItem(id = index.toLong(), listId = index.toLong(), name = "Item $index".takeIf { index % 2 == 0 })
-          current.copy(items = current.items + item)
-        }
-      }
-    }
+    fetchItems()
   }
 }
