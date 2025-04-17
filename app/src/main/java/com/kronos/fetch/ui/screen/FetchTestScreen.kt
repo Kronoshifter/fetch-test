@@ -106,6 +106,8 @@ fun FetchTestContent(
     }.sortedWith(
       compareBy(
         { it.listId },
+        // Using my best judgment here, I'm thinking that sorted by name should mean that names with smaller numbers in them should be sorted before other ones
+        { it.name?.length ?: 0 },
         { it.name }
       )
     ).groupBy { it.listId }.forEach { listId, listItems ->
