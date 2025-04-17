@@ -1,7 +1,11 @@
 package com.kronos.fetch
 
+import android.R.attr.level
 import android.app.Application
 import com.kronos.fetch.ui.screen.FetchTestViewModel
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.okhttp.OkHttp
+import io.ktor.client.plugins.logging.Logging
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
@@ -21,5 +25,13 @@ class FetchTestApplication : Application() {
 }
 
 val appModule = module {
+  single {
+    HttpClient(OkHttp) {
+      install(Logging)
+
+
+    }
+  }
+
   viewModelOf(::FetchTestViewModel)
 }

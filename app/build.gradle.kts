@@ -61,10 +61,14 @@ dependencies {
   // Ktor
   implementation(libs.ktor.client.core)
   implementation(libs.ktor.client.okhttp)
+  implementation(libs.ktor.client.logging)
 
   // Koin
   implementation(platform(libs.koin.bom))
   implementation(libs.koin.compose)
+
+  // Misc
+  implementation(libs.slf4j)
 
   // Test
   testImplementation(libs.junit)
