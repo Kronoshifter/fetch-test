@@ -53,5 +53,7 @@ val appModule = module {
     }
   }
 
+  singleOf(::ApiServiceImpl) bind ApiService::class
+
   viewModelOf(::FetchTestViewModel)
 }
