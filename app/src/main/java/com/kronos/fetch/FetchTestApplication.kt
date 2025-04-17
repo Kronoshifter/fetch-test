@@ -5,7 +5,9 @@ import android.app.Application
 import com.kronos.fetch.ui.screen.FetchTestViewModel
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.logging.Logging
+import io.ktor.serialization.kotlinx.json.json
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
@@ -27,9 +29,9 @@ class FetchTestApplication : Application() {
 val appModule = module {
   single {
     HttpClient(OkHttp) {
-      install(Logging)
-
-
+      install(ContentNegotiation) {
+        json()
+      }
     }
   }
 
