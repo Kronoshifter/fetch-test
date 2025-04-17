@@ -2,8 +2,7 @@
 <project version="4">
   <component name="CompilerConfiguration">
     <bytecodeTargetLevel>
-      <module name="Fetch_Test.app" target="21" />
-      <module name="My_Application.app" target="21" />
+      <module name="FetchTest.app" target="21" />
     </bytecodeTargetLevel>
   </component>
 </project>
