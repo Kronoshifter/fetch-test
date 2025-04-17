@@ -69,9 +69,6 @@ dependencies {
   implementation(platform(libs.koin.bom))
   implementation(libs.koin.compose)
 
-  // Misc
-  implementation(libs.slf4j)
-
   // Test
   testImplementation(libs.junit)
   androidTestImplementation(libs.androidx.junit)
