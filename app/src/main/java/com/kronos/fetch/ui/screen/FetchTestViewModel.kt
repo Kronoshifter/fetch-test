@@ -37,7 +37,7 @@ class FetchTestViewModel(
 
       is Async.Error -> uiState.copy(userMessage = itemsAsync.message).toSuccess()
     }
-  }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(stopTimeout = 5.seconds, replayExpiration = 2.seconds), Async.Loading)
+  }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), Async.Loading)
 
   fun clearUserMessage() {
     _uiState.update { it.copy(userMessage = null) }
@@ -67,7 +67,8 @@ class FetchTestViewModel(
   private fun List<FetchItem>.sortedByListIdAndName() = sortedWith(
     compareBy(
       { it.listId },
-      // Using my best judgment here, I'm thinking that sorted by name should mean that names with smaller numbers in them should be sorted before other ones
+      // Using my best judgment here, I'm thinking that sorted by name should
+      // mean that names with smaller numbers in them should be sorted before other ones
       { it.name?.length ?: 0 },
       { it.name }
     )
