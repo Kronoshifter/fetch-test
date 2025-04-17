@@ -35,14 +35,14 @@ class FetchTestViewModel(
     .flowOn(Dispatchers.Default)
     .catch { error ->
       Log.e("FetchTestViewModel", error.message, error)
-      emit(emptyList<FetchItem>().toError(error.message ?: "Error retrieving items, please try again"))
+      emit((error.message ?: "Error retrieving items, please try again").toError())
     }
 
   val uiState = combine(_uiState, _itemsAsync) { uiState, itemsAsync ->
     when (itemsAsync) {
       Async.Loading -> Async.Loading
       is Async.Success -> uiState.copy(items = itemsAsync.data).toSuccess()
-      is Async.Error -> uiState.copy(userMessage = itemsAsync.message).toError(itemsAsync.message)
+      is Async.Error -> uiState.copy(userMessage = itemsAsync.message).toSuccess()
     }
   }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), Async.Loading)
 }
