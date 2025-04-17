@@ -17,14 +17,14 @@ data class FetchTestUiState(
 class FetchTestViewModel(
 
 ) : ViewModel() {
-  private val _state = MutableStateFlow(FetchTestUiState())
-  val state = _state.asStateFlow()
+  private val _uiState = MutableStateFlow(FetchTestUiState())
+  val uiState = _uiState.asStateFlow()
 
   init {
     viewModelScope.launch {
       repeat(10) { index ->
         delay(2.seconds)
-        _state.update { current ->
+        _uiState.update { current ->
           val item = FetchItem(id = index.toLong(), listId = index.toLong(), name = "Item $index".takeIf { index % 2 == 0 })
           current.copy(items = current.items + item)
         }
