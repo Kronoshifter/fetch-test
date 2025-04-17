@@ -26,16 +26,18 @@ small project.
 
 ### MVVM
 I structured the app around the MVVM (Model-View-ViewModel) pattern. MVVM is a natural fit for Compose,
-keeping UI logic in the composables and ensuring that business logic, state, and side effects are all
-handled in the ViewModel. This separation makes the codebase easier to maintain, test, and extend.
-The ViewModel exposes UI state as a flow, which the composables simply observe and render—no need 
-to worry about lifecycle headaches or manual state management.
+keeping UI logic in the composables and ensuring that business logic and state are all
+handled in the ViewModel. This separation makes the codebase easier to maintain, test, and extend. In this instance,
+the ViewModel exposes UI state as a flow, which the composables simply observe and render; no need 
+to worry about lifecycle headaches or manual state management. While MVVM may have been a tad overkill
+for a project of this scope, it's nevertheless a good showcase of a well-architected app.
 
 ### Network Abstractions
 I handled networking through a dedicated API service abstraction. This keeps the ViewModel clean
 and focused on presentation logic, while the API service takes care of all the HTTP details.
 By abstracting the network layer, it’s easy to swap out implementations, mock data for testing,
-or handle errors. Ktor’s flexibility made this especially straightforward.
+or handle errors. Ktor’s flexibility made this especially straightforward. Again, while such abstractions
+may not be necessary for this project, they're a good way to keep the codebase clean and maintainable.
 
 ### Using Libraries
 When I initially saw the contents of the challenge, I struggled with the question of whether I should use external libraries
