@@ -18,6 +18,8 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.seconds
 
 data class FetchTestUiState(
@@ -29,14 +31,7 @@ class FetchTestViewModel(
   private val api: ApiService
 ) : ViewModel() {
   private val _uiState = MutableStateFlow(FetchTestUiState())
-  private val _itemsAsync = api.fetchItems()
-    .distinctUntilChanged()
-    .map { it.toSuccess() }
-    .flowOn(Dispatchers.Default)
-    .catch { error ->
-      Log.e("FetchTestViewModel", error.message, error)
-      emit((error.message ?: "Error retrieving items, please try again").toError())
-    }
+  private val _itemsAsync = MutableStateFlow<Async<List<FetchItem>>>(Async.Loading)
 
   val uiState = combine(_uiState, _itemsAsync) { uiState, itemsAsync ->
     when (itemsAsync) {
@@ -45,4 +40,33 @@ class FetchTestViewModel(
       is Async.Error -> uiState.copy(userMessage = itemsAsync.message).toSuccess()
     }
   }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), Async.Loading)
+
+  fun clearUserMessage() {
+    _uiState.update { it.copy(userMessage = null) }
+  }
+
+  private fun fetchItems() {
+    viewModelScope.launch {
+      api.fetchItems()
+        .distinctUntilChanged()
+        .map { it.toSuccess() }
+        .flowOn(Dispatchers.IO)
+        .catch { error ->
+          Log.e("FetchTestViewModel", error.message, error)
+          emit((error.message ?: "Error retrieving items, please try again").toError())
+        }
+        .collect { asyncItems ->
+          _itemsAsync.update { asyncItems }
+        }
+    }
+  }
+
+  fun refresh() {
+    fetchItems()
+  }
+
+  init {
+    fetchItems()
+  }
+
 }

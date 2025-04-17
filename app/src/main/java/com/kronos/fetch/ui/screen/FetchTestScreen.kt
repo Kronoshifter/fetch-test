@@ -8,9 +8,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Devices.PIXEL_7
@@ -19,29 +23,58 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.kronos.fetch.model.FetchItem
+import com.kronos.fetch.ui.component.AsyncContent
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FetchTestScreen(
   modifier: Modifier = Modifier,
-  vm: FetchTestViewModel = koinViewModel()
+  snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+  vm: FetchTestViewModel = koinViewModel(),
 ) {
+
   Scaffold(
     topBar = {
       TopAppBar(
-        title = { Text(text = "Fetch Test") }
+        title = { Text(text = "Fetch Test") },
+        actions = {
+          IconButton(onClick = vm::refresh) {
+            Icon(
+              imageVector = Icons.Default.Refresh,
+              contentDescription = "Refresh"
+            )
+          }
+        }
       )
     },
+    snackbarHost = { SnackbarHost(snackbarHostState) },
     modifier = modifier
-  ) {
+  ) { paddingValues ->
     val state by vm.uiState.collectAsStateWithLifecycle()
 
-    FetchTestContent(
-      items = state.items,
-      padding = it,
-      modifier = Modifier.fillMaxSize()
-    )
+    AsyncContent(
+      async = state,
+      modifier = Modifier
+        .fillMaxSize()
+        .padding(paddingValues),
+    ) { uiState ->
+      FetchTestContent(
+        items = uiState.items,
+        modifier = Modifier.fillMaxSize()
+      )
+
+      uiState.userMessage?.let {  message ->
+        LaunchedEffect(message) {
+          snackbarHostState.showSnackbar(
+            message = message,
+            withDismissAction = true,
+            duration = SnackbarDuration.Short
+          )
+          vm.clearUserMessage()
+        }
+      }
+    }
   }
 }
 
@@ -50,12 +83,23 @@ fun FetchTestScreen(
 fun FetchTestContent(
   items: List<FetchItem>,
   modifier: Modifier = Modifier,
-  padding: PaddingValues = PaddingValues(0.dp),
 ) {
+  if (items.isEmpty()) {
+    Box(
+      contentAlignment = Alignment.Center,
+      modifier = modifier
+    ) {
+      Text(
+        text = "No data",
+        color = MaterialTheme.colorScheme.secondary,
+      )
+    }
+    return
+  }
+
   LazyColumn(
     horizontalAlignment = Alignment.CenterHorizontally,
     verticalArrangement = Arrangement.spacedBy(8.dp),
-    contentPadding = padding,
     modifier = modifier
   ) {
     items.filterNot {
@@ -177,7 +221,9 @@ private fun FetchListItemPreview() {
       name = "Test",
       itemId = 1,
       listId = 1,
-      modifier = Modifier.padding(16.dp).height(IntrinsicSize.Min),
+      modifier = Modifier
+        .padding(16.dp)
+        .height(IntrinsicSize.Min),
     )
   }
 }
@@ -187,7 +233,9 @@ private fun FetchListItemPreview() {
 private fun FetchListHeaderPreview() {
     FetchListHeader(
       listId = 1,
-      modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
+      modifier = Modifier
+        .fillMaxWidth()
+        .height(IntrinsicSize.Min),
     )
 }
 
