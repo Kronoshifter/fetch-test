@@ -33,7 +33,6 @@ fun FetchTestScreen(
   snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
   vm: FetchTestViewModel = koinViewModel(),
 ) {
-
   Scaffold(
     topBar = {
       TopAppBar(

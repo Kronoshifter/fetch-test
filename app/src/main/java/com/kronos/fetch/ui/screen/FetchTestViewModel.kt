@@ -48,9 +48,8 @@ class FetchTestViewModel(
   private fun fetchItems() {
     viewModelScope.launch {
       api.fetchItems()
-        .distinctUntilChanged()
         .map { it.toSuccess() }
-        .flowOn(Dispatchers.IO)
+        .flowOn(Dispatchers.Default)
         .catch { error ->
           Log.e("FetchTestViewModel", error.message, error)
           emit((error.message ?: "Error retrieving items, please try again").toError())
@@ -68,5 +67,4 @@ class FetchTestViewModel(
   init {
     fetchItems()
   }
-
 }
