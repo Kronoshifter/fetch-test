@@ -35,7 +35,7 @@ class FetchTestViewModel(
     .flowOn(Dispatchers.Default)
     .catch { error ->
       Log.e("FetchTestViewModel", error.message, error)
-      emit(emptyList<FetchItem>().toError(error.message ?: "Error retrieving items"))
+      emit(emptyList<FetchItem>().toError(error.message ?: "Error retrieving items, please try again"))
     }
 
   val uiState = combine(_uiState, _itemsAsync) { uiState, itemsAsync ->
