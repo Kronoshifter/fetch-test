@@ -1,6 +1,5 @@
 package com.kronos.fetch.ui.component
 
-import android.R.id.message
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text

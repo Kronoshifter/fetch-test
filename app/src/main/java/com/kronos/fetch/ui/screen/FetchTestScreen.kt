@@ -63,7 +63,7 @@ fun FetchTestScreen(
         modifier = Modifier.fillMaxSize()
       )
 
-      uiState.userMessage?.let {  message ->
+      uiState.userMessage?.let { message ->
         LaunchedEffect(message) {
           snackbarHostState.showSnackbar(
             message = message,
@@ -223,12 +223,12 @@ private fun FetchListItemPreview() {
 @Preview(device = PIXEL_7, showBackground = true)
 @Composable
 private fun FetchListHeaderPreview() {
-    FetchListHeader(
-      listId = 1,
-      modifier = Modifier
-        .fillMaxWidth()
-        .height(IntrinsicSize.Min),
-    )
+  FetchListHeader(
+    listId = 1,
+    modifier = Modifier
+      .fillMaxWidth()
+      .height(IntrinsicSize.Min),
+  )
 }
 
 @Preview(device = PIXEL_7, showBackground = true)

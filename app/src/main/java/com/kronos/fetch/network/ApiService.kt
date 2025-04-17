@@ -1,10 +1,9 @@
 package com.kronos.fetch.network
 
-import android.util.Log.e
 import com.kronos.fetch.model.FetchItem
-import io.ktor.client.HttpClient
-import io.ktor.client.call.body
-import io.ktor.client.request.request
+import io.ktor.client.*
+import io.ktor.client.call.*
+import io.ktor.client.request.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
@@ -16,7 +15,6 @@ interface ApiService {
 
 class ApiServiceImpl(private val client: HttpClient) : ApiService {
   override fun fetchItems(): Flow<List<FetchItem>> = flow {
-    val response = client.request(REQUEST_URL).body<List<FetchItem>>()
-    emit(response)
+    emit(client.request(REQUEST_URL).body())
   }
 }
