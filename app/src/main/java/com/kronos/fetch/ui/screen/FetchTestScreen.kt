@@ -3,6 +3,7 @@ package com.kronos.fetch.ui.screen
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -17,6 +18,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.tooling.preview.Devices.PIXEL_7
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
@@ -157,6 +159,7 @@ fun FetchListHeader(
   Box(
     contentAlignment = Alignment.Center,
     modifier = modifier
+      .shadow(elevation = 8.dp)
       .background(MaterialTheme.colorScheme.primary)
   ) {
     Text(
@@ -176,6 +179,7 @@ fun FetchListItem(
   modifier: Modifier = Modifier
 ) {
   Card(
+    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
     modifier = Modifier
       .fillMaxHeight()
       .then(modifier),
