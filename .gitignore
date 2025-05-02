@@ -8,6 +8,8 @@
 /.idea/navEditor.xml
 /.idea/assetWizardSettings.xml
 /.idea/valkyrie_settings.xml
+/.idea/misc.xml
+/.idea/codeStyles
 .DS_Store
 /build
 /captures
