@@ -15,6 +15,7 @@ import kotlin.time.Duration.Companion.seconds
 
 data class FetchTestUiState(
   val items: List<FetchItem> = emptyList(),
+  val removedItems: List<FetchItem> = emptyList(),
   val userMessage: String? = null
 )
 
@@ -44,9 +45,13 @@ class FetchTestViewModel(
   }
 
   fun refresh() {
-    _uiState.update { FetchTestUiState() }
+    _uiState.update { it.copy(items = emptyList()) }
     _itemsAsync.update { Async.Loading }
     fetchItems()
+  }
+
+  fun removeItem(item: FetchItem) {
+    _uiState.update { it.copy(removedItems = it.removedItems + item) }
   }
 
   private fun fetchItems() {

@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -18,7 +19,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Devices.PIXEL_7
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
@@ -62,6 +65,8 @@ fun FetchTestScreen(
     ) { uiState ->
       FetchTestContent(
         items = uiState.items,
+        removedItems = uiState.removedItems,
+        onDismissItem = vm::removeItem,
         modifier = Modifier.fillMaxSize()
       )
 
@@ -83,6 +88,8 @@ fun FetchTestScreen(
 @Composable
 fun FetchTestContent(
   items: List<FetchItem>,
+  removedItems: List<FetchItem>,
+  onDismissItem: (FetchItem) -> Unit,
   modifier: Modifier = Modifier,
 ) {
   if (items.isEmpty()) {
@@ -103,7 +110,7 @@ fun FetchTestContent(
     verticalArrangement = Arrangement.spacedBy(8.dp),
     modifier = modifier
   ) {
-    items.groupBy { it.listId }.forEach { listId, listItems ->
+    items.filter { it !in removedItems }.groupBy { it.listId }.forEach { listId, listItems ->
       stickyHeader(
         key = "FetchListHeader-$listId",
         contentType = "FetchListHeader"
@@ -130,9 +137,8 @@ fun FetchTestContent(
       ) { item ->
         requireNotNull(item.name) { "All items with null names should be filtered out by now, something went very wrong" }
         FetchListItem(
-          name = item.name,
-          itemId = item.id,
-          listId = item.listId,
+          item = item,
+          onDismiss = onDismissItem,
           modifier = Modifier
             .height(IntrinsicSize.Min)
             .fillMaxWidth()
@@ -154,7 +160,7 @@ fun FetchTestContent(
 @Composable
 fun FetchListHeader(
   listId: Long,
-  modifier: Modifier = Modifier
+  modifier: Modifier = Modifier,
 ) {
   Box(
     contentAlignment = Alignment.Center,
@@ -173,37 +179,89 @@ fun FetchListHeader(
 
 @Composable
 fun FetchListItem(
-  name: String,
-  itemId: Long,
-  listId: Long,
-  modifier: Modifier = Modifier
+  item: FetchItem,
+  onDismiss: (FetchItem) -> Unit,
+  modifier: Modifier = Modifier,
 ) {
-  Card(
-    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
+  val dismissState = rememberSwipeToDismissBoxState()
+
+  LaunchedEffect(dismissState.targetValue, dismissState.currentValue) {
+    if (
+      (dismissState.currentValue == SwipeToDismissBoxValue.EndToStart || dismissState.currentValue == SwipeToDismissBoxValue.StartToEnd)
+      && dismissState.targetValue == dismissState.currentValue
+    ) {
+      onDismiss(item)
+    }
+  }
+
+  val dismissColor = Color.Red
+
+  SwipeToDismissBox(
+    state = dismissState,
+    backgroundContent = {
+      Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = dismissColor,
+        shape = CardDefaults.shape
+      ) {
+        Row(
+          verticalAlignment = Alignment.CenterVertically,
+        ) {
+          if (dismissState.targetValue != SwipeToDismissBoxValue.EndToStart) {
+            Icon(
+              imageVector = Icons.Filled.Delete,
+              contentDescription = null,
+              tint = contentColorFor(Color.Red),
+              modifier = Modifier.padding(16.dp)
+            )
+          }
+
+          Spacer(Modifier.weight(1f))
+
+          if (dismissState.targetValue != SwipeToDismissBoxValue.StartToEnd) {
+            Icon(
+              imageVector = Icons.Filled.Delete,
+              contentDescription = null,
+              tint = contentColorFor(Color.Red),
+              modifier = Modifier.padding(16.dp)
+            )
+          }
+        }
+      }
+    },
     modifier = Modifier
       .fillMaxHeight()
-      .then(modifier),
+      .then(modifier)
+      .clipToBounds()
   ) {
-    Row(
-      verticalAlignment = Alignment.CenterVertically,
+    Card(
+      border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
       modifier = Modifier
-        .fillMaxWidth()
-        .padding(horizontal = 16.dp, vertical = 8.dp)
+        .fillMaxHeight()
     ) {
-      Text(
-        text = name,
-        style = MaterialTheme.typography.headlineLarge,
-        color = MaterialTheme.colorScheme.primary,
-      )
-
-      Spacer(Modifier.weight(1f))
-
-      Column(
-        horizontalAlignment = Alignment.End,
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+      Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+          .fillMaxWidth()
+          .padding(horizontal = 16.dp, vertical = 8.dp)
       ) {
-        Text("List ID: $listId", color = MaterialTheme.colorScheme.secondary)
-        Text("Item ID: $itemId", color = MaterialTheme.colorScheme.secondary)
+        item.name?.let {
+          Text(
+            text = it,
+            style = MaterialTheme.typography.headlineLarge,
+            color = MaterialTheme.colorScheme.primary,
+          )
+        }
+
+        Spacer(Modifier.weight(1f))
+
+        Column(
+          horizontalAlignment = Alignment.End,
+          verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+          Text("List ID: ${item.listId}", color = MaterialTheme.colorScheme.secondary)
+          Text("Item ID: ${item.id}", color = MaterialTheme.colorScheme.secondary)
+        }
       }
     }
   }
@@ -212,11 +270,16 @@ fun FetchListItem(
 @Preview(device = PIXEL_7, showBackground = true)
 @Composable
 private fun FetchListItemPreview() {
+  val item = FetchItem(
+    name = "Test Item",
+    listId = 1,
+    id = 1
+  )
+
   Surface(modifier = Modifier.height(IntrinsicSize.Min)) {
     FetchListItem(
-      name = "Test",
-      itemId = 1,
-      listId = 1,
+      item = item,
+      onDismiss = {},
       modifier = Modifier
         .padding(16.dp)
         .height(IntrinsicSize.Min),
@@ -248,6 +311,8 @@ private fun FetchTestContentPreview() {
         FetchItem(id = 5, listId = 3, name = "Test 5"),
         FetchItem(id = 6, listId = 3, name = "Test 6"),
       ),
+      removedItems = listOf(),
+      onDismissItem = {},
       modifier = Modifier.fillMaxSize()
     )
   }
